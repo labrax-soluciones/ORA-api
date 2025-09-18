@@ -1,0 +1,33 @@
+
+CORS en config/cors.php (para Angular):
+
+'paths' => ['api/*', 'sanctum/csrf-cookie'],
+'allowed_methods' => ['*'],
+'allowed_origins' => [env('CORS_ALLOWED_ORIGINS', 'http://localhost:4200')],
+'allowed_headers' => ['*'],
+'supports_credentials' => false,
+
+
+Comandos utiles para gestionar docker
+
+up:
+docker compose up -d --build
+
+down:
+docker compose down
+
+shell:
+docker compose exec app bash
+
+migrate:
+docker compose exec app php artisan migrate
+
+seed:
+docker compose exec app php artisan db:seed
+docker compose exec app php artisan db:seed --class=AdminUserSeeder
+
+log:
+docker compose logs -f --tail=100
+
+tinker:
+docker compose exec app php artisan tinker
