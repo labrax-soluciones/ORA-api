@@ -1,0 +1,72 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aparca/app:latest
+    container_name: aparca_app
+    volumes:
+      - ./:/var/www
+    working_dir: /var/www
+    depends_on:
+      - mariadb
+    networks:
+      - aparca_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      # Opcional: habilitar estas si usas Xdebug más adelante
+      # XDEBUG_MODE: off
+      # XDEBUG_CONFIG: client_host=host.docker.internal client_port=9003
+      PHP_MEMORY_LIMIT: 512M
+
+  nginx:
+    image: nginx:alpine
+    container_name: aparca_nginx
+    ports:
+      - "8088:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - aparca_net
+
+  mariadb:
+    image: mariadb:11
+    container_name: aparca_mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: aparca
+      MYSQL_USER: aparca
+      MYSQL_PASSWORD: aparcapass
+    ports:
+      - "33068:3306"
+    volumes:
+      - mariadb_data_aparca:/var/lib/mysql
+    networks:
+      - aparca_net
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -u$$MYSQL_USER -p$$MYSQL_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  composer:
+    image: composer:latest
+    container_name: aparca_composer
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: ["composer", "install", "--no-interaction", "--prefer-dist"]
+    depends_on:
+      - app
+    networks:
+      - aparca_net
+
+networks:
+  aparca_net:
+
+volumes:
+  mariadb_data_aparca:
