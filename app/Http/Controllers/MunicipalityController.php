@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\MunicipalityStoreRequest;
+use App\Http\Requests\MunicipalityUpdateRequest;
 use App\Models\Municipality;
 use Illuminate\Http\Request;
 
@@ -24,6 +25,12 @@ class MunicipalityController extends Controller {
 
     // Detalle
     public function show(Municipality $municipality) {
+        return response()->json($municipality);
+    }
+
+
+    public function update(MunicipalityUpdateRequest $request, Municipality $municipality) {
+        $municipality->update($request->validated());
         return response()->json($municipality);
     }
 }

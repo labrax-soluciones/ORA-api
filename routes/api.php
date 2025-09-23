@@ -26,4 +26,7 @@ Route::middleware(['auth:api'])->group(function () {
     // crear: SOLO admin
     Route::post('/municipalities', [MunicipalityController::class, 'store'])
         ->middleware('role:admin,api');
+
+    Route::put('/municipalities/{municipality}', [MunicipalityController::class, 'update'])
+        ->middleware('role:admin,api');
 });
