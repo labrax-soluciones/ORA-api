@@ -19,6 +19,8 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements JWTSubject {
     use HasFactory, Notifiable, HasRoles;
 
+    protected string $guard_name = 'api';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -28,6 +30,12 @@ class User extends Authenticatable implements JWTSubject {
         'name',
         'email',
         'password',
+
+        'first_name',
+        'last_name',
+        'phone',
+        'id_document',
+        'avatar_path',
     ];
 
     /**
@@ -52,6 +60,16 @@ class User extends Authenticatable implements JWTSubject {
         ];
     }
 
+    protected static function booted() {
+        static::saving(function ($user) {
+            $full = trim(trim((string)$user->first_name) . ' ' . trim((string)$user->last_name));
+            if ($full !== '') {
+                $user->name = $full;
+            }
+        });
+    }
+
+
     public function getJWTIdentifier() {
         return $this->getKey(); // Generalmente el ID
     }
@@ -60,4 +78,19 @@ class User extends Authenticatable implements JWTSubject {
         return []; // Puedes añadir claims personalizados si quieres
     }
 
+    public function technicianProfile() {
+        return $this->hasOne(TechnicianProfile::class);
+    }
+    public function policeProfile() {
+        return $this->hasOne(PoliceProfile::class);
+    }
+    public function municipalAdminProfile() {
+        return $this->hasOne(\App\Models\MunicipalAdminProfile::class);
+    }
+
+
+    public function getFullNameAttribute(): string {
+        $full = trim(trim((string)$this->first_name) . ' ' . trim((string)$this->last_name));
+        return $full !== '' ? $full : (string)($this->name ?? '');
+    }
 }

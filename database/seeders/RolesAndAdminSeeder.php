@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Enums\PermissionName;
+use App\Enums\RoleName;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
@@ -12,73 +14,74 @@ class RolesAndAdminSeeder extends Seeder
 {
     public function run(): void
     {
-        // ----- Permisos base (ajusta/añade cuando avance el dominio) -----
-        $permissions = [
-            // administración global
-            'admin.access',
+        // Limpia caché de permisos por si ejecutas varias veces
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
-            // gestión municipal
-            'municipality.manage',     // alta/baja/edición municipio
-            'zone.manage',             // zonas de parking y restricciones
-            'police.manage',           // alta/baja/edición policías
-
-            // operaciones
-            'occupancy.view',          // ver ocupación/estadísticas
-            'parking.register',        // que un usuario registre aparcamiento
-            'vehicle.manage',          // CRUD vehículos propios
-        ];
-
-        foreach ($permissions as $perm) {
+        // 1) Crear TODOS los permisos a partir del Enum
+        foreach (PermissionName::cases() as $permCase) {
             Permission::firstOrCreate(
-                ['name' => $perm, 'guard_name' => 'api']
+                ['name' => $permCase->value, 'guard_name' => 'api']
             );
         }
 
-        // ----- Roles mínimos -----
+        // 2) Definir los permisos por rol (usando enums)
         $roles = [
-            'admin' => [
-                'admin.access',
-                'municipality.manage',
-                'zone.manage',
-                'police.manage',
-                'occupancy.view',
-                'parking.register',
-                'vehicle.manage',
+            RoleName::ADMIN->value => [
+                PermissionName::ADMIN_ACCESS->value,
+                PermissionName::MUNICIPALITY_MANAGE->value,
+                PermissionName::ZONE_MANAGE->value,
+                PermissionName::POLICE_MANAGE->value,
+                PermissionName::OCCUPANCY_VIEW->value,
+                PermissionName::PARKING_REGISTER->value,
+                PermissionName::VEHICLE_MANAGE->value,
             ],
-            'municipal_admin' => [
-                'municipality.manage',
-                'zone.manage',
-                'police.manage',
-                'occupancy.view',
+            RoleName::MUNICIPAL_ADMIN->value => [
+                PermissionName::MUNICIPALITY_MANAGE->value,
+                PermissionName::ZONE_MANAGE->value,
+                PermissionName::POLICE_MANAGE->value,
+                PermissionName::OCCUPANCY_VIEW->value,
             ],
-            'police' => [
-                'occupancy.view',
+            RoleName::TECHNICIAN->value => [
+                // Ajusta si el técnico no debe gestionar policías:
+                PermissionName::MUNICIPALITY_MANAGE->value,
+                PermissionName::ZONE_MANAGE->value,
+                PermissionName::POLICE_MANAGE->value,
+                PermissionName::OCCUPANCY_VIEW->value,
             ],
-            'user' => [
-                'parking.register',
-                'vehicle.manage',
+            RoleName::POLICE->value => [
+                PermissionName::OCCUPANCY_VIEW->value,
+            ],
+            RoleName::USER->value => [
+                PermissionName::PARKING_REGISTER->value,
+                PermissionName::VEHICLE_MANAGE->value,
             ],
         ];
 
-        foreach ($roles as $roleName => $perms) {
+        // 3) Crear roles y sincronizar permisos
+        foreach ($roles as $roleName => $permList) {
             $role = Role::firstOrCreate(
                 ['name' => $roleName, 'guard_name' => 'api']
             );
-            $role->syncPermissions($perms);
+            $role->syncPermissions($permList);
         }
 
-        // ----- Usuario admin principal -----
+        // 4) Usuario admin principal
         $admin = User::updateOrCreate(
             ['email' => 'admin@aparca.local'],
             [
-                'name' => 'Super Admin',
-                'password' => Hash::make('admin1234'), // cambia en prod
+                // con tu booted() esto se actualizará desde first/last si los añades
+                'name'       => 'Super Admin',
+                'first_name' => 'Super',
+                'last_name'  => 'Admin',
+                'password'   => Hash::make('admin1234'), // cambia en prod
             ]
         );
 
-        // asignar rol admin
-        if (!$admin->hasRole('admin')) {
-            $admin->assignRole('admin');
+        if (!$admin->hasRole(RoleName::ADMIN->value)) {
+            $admin->assignRole(RoleName::ADMIN->value);
         }
+
+        // refresca caché
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }
