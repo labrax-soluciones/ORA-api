@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MunicipalAdminController;
 use App\Http\Controllers\MunicipalityController;
 use App\Http\Controllers\PoliceController;
 use App\Http\Controllers\TechnicianController;
@@ -36,6 +37,15 @@ Route::middleware(['auth:api'])->group(function () {
     Route::prefix('/municipalities/{municipality}')
         ->middleware(['municipality.scope'])
         ->group(function () {
+
+            // --- Administradores municipales (requieren municipality.manage) ---
+            Route::middleware('permission:municipality.manage,api')->group(function () {
+                Route::get('/admins', [MunicipalAdminController::class, 'index']);
+                Route::post('/admins', [MunicipalAdminController::class, 'store']);
+                Route::put('/admins/{admin}', [MunicipalAdminController::class, 'update']);
+                Route::delete('/admins/{admin}', [MunicipalAdminController::class, 'destroy']);
+            });
+
 
             // Técnicos (requieren municipality.manage)
             Route::middleware('permission:municipality.manage,api')->group(function () {
