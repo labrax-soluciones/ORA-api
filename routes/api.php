@@ -6,6 +6,7 @@ use App\Http\Controllers\MunicipalAdminController;
 use App\Http\Controllers\MunicipalityController;
 use App\Http\Controllers\PoliceController;
 use App\Http\Controllers\TechnicianController;
+use App\Http\Controllers\UserController;
 
 Route::get('/health', fn() => response()->json(['ok' => true]));
 
@@ -63,4 +64,9 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::delete('/police/{police}', [PoliceController::class, 'destroy']);
             });
         });
+
+    // Usuarios superadmin (requiren role admin)
+    Route::resource('users', UserController::class)
+        ->only(['index', 'show', 'store', 'update', 'destroy'])
+        ->middleware('role:admin,api');
 });
