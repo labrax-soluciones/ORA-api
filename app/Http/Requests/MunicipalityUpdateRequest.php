@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\MunicipalityStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
@@ -12,37 +13,26 @@ class MunicipalityUpdateRequest extends FormRequest {
     }
 
     public function rules(): array {
-        $allowedLocales = ['es', 'en', 'gl', 'pt', 'fr'];
+        $status = array_map(fn($c) => $c->value, MunicipalityStatus::cases());
         $id = $this->route('municipality')->id ?? null;
 
         return [
-            'name'           => ['required', 'string', 'max:150', Rule::unique('municipalities', 'name')->ignore($id)],
-            'slug'           => ['required', 'string', 'max:150', 'alpha_dash:ascii', Rule::unique('municipalities', 'slug')->ignore($id)],
-            'timezone'       => ['required', 'timezone:all'],
-            'default_locale' => ['required', Rule::in($allowedLocales)],
-            'locales'        => ['required', 'array', 'min:1'],
-            'locales.*'      => [Rule::in($allowedLocales)],
-            'sso_domains'    => ['nullable', 'array'],
-            'sso_domains.*'  => ['string', 'max:255'],
-            'contact_email'  => ['nullable', 'email', 'max:255'],
-            'contact_phone'  => ['nullable', 'string', 'max:30'],
-            'status'         => ['nullable', Rule::in(['active', 'inactive'])],
-            'settings'       => ['nullable', 'array'],
+            // En update permitimos parches: usa "sometimes" + "filled"
+            'name'           => ['sometimes', 'filled', 'string', 'max:150', Rule::unique('municipalities', 'name')->ignore($id)],
+            'slug'           => ['sometimes', 'nullable', 'string', 'max:150', 'alpha_dash:ascii', Rule::unique('municipalities', 'slug')->ignore($id)],
+            'contact_email'  => ['sometimes', 'nullable', 'email', 'max:255'],
+            'contact_phone'  => ['sometimes', 'nullable', 'string', 'max:30'],
+            'status'         => ['sometimes', 'nullable', Rule::in($status)],
+            'settings'       => ['sometimes', 'nullable', 'array'],
         ];
     }
 
     protected function prepareForValidation(): void {
-        $slug = $this->input('slug') ?: $this->input('name');
-        $this->merge(['slug' => Str::slug((string) $slug)]);
-    }
-
-    public function withValidator($validator) {
-        $validator->after(function ($v) {
-            $locales = (array) $this->input('locales', []);
-            $default = $this->input('default_locale');
-            if ($default && !in_array($default, $locales, true)) {
-                $v->errors()->add('locales', __('validation.custom.locales.must_include_default'));
-            }
-        });
+        // Si mandan slug vacío pero hay name, lo normalizamos; si no mandan slug, no tocamos
+        if ($this->has('slug')) {
+            $slug = $this->input('slug');
+            $slug = $slug ?: $this->input('name'); // si viene vacío, lo generamos desde name
+            $this->merge(['slug' => $slug ? Str::slug((string) $slug) : null]);
+        }
     }
 }

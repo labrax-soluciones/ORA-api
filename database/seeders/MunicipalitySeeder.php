@@ -11,62 +11,56 @@ use App\Models\MunicipalAdminProfile;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class MunicipalitySeeder extends Seeder
-{
-    public function run(): void
-    {
+class MunicipalitySeeder extends Seeder {
+    public function run(): void {
         $rows = [
             [
-                'name'           => 'Madrid',
-                'slug'           => 'madrid',
-                'timezone'       => 'Europe/Madrid',
-                'default_locale' => 'es',
-                'locales'        => ['es', 'en'],
-                'sso_domains'    => ['madrid.es'],
-                'contact_email'  => 'contacto@madrid.es',
-                'contact_phone'  => '+34 910000000',
-                'status'         => 'active',
-                'settings'       => ['max_parking_hours' => 4],
+                'name'          => 'Madrid',
+                'slug'          => 'madrid',
+                'contact_email' => 'contacto@madrid.es',
+                'contact_phone' => '+34 910000000',
+                'status'        => 'active',
+                'settings'      => ['max_parking_hours' => 4],
             ],
             [
-                'name'           => 'Valencia',
-                'slug'           => 'valencia',
-                'timezone'       => 'Europe/Madrid',
-                'default_locale' => 'es',
-                'locales'        => ['es', 'en', 'fr'],
-                'sso_domains'    => ['valencia.es'],
-                'contact_email'  => 'info@valencia.es',
-                'contact_phone'  => '+34 960000000',
-                'status'         => 'active',
-                'settings'       => ['max_parking_hours' => 3],
+                'name'          => 'Valencia',
+                'slug'          => 'valencia',
+                'contact_email' => 'info@valencia.es',
+                'contact_phone' => '+34 960000000',
+                'status'        => 'active',
+                'settings'      => ['max_parking_hours' => 3],
             ],
             [
-                'name'           => 'A Coruna',
-                'slug'           => 'a-coruna',
-                'timezone'       => 'Europe/Madrid',
-                'default_locale' => 'gl',
-                'locales'        => ['gl', 'es', 'en'],
-                'sso_domains'    => ['coruna.gal'],
-                'contact_email'  => 'atencion@coruna.gal',
-                'contact_phone'  => '+34 981000000',
-                'status'         => 'active',
-                'settings'       => ['max_parking_hours' => 5],
+                'name'          => 'A Coruna',
+                'slug'          => 'a-coruna',
+                'contact_email' => 'atencion@coruna.gal',
+                'contact_phone' => '+34 981000000',
+                'status'        => 'active',
+                'settings'      => ['max_parking_hours' => 5],
             ],
         ];
 
         foreach ($rows as $data) {
-            $mun = Municipality::firstOrCreate(['slug' => $data['slug']], $data);
+            // usamos slug como clave natural
+            $mun = Municipality::updateOrCreate(
+                ['slug' => $data['slug']],
+                [
+                    'name'          => $data['name'],
+                    'contact_email' => $data['contact_email'],
+                    'contact_phone' => $data['contact_phone'],
+                    'status'        => $data['status'],
+                    'settings'      => $data['settings'],
+                ]
+            );
 
-            // Solo poblamos Madrid con personal de prueba
             if ($mun->slug === 'madrid') {
                 $this->seedStaff($mun);
             }
         }
     }
 
-    private function seedStaff(Municipality $municipality): void
-    {
-        // 1) Municipal Admin (+ perfil)
+    private function seedStaff(Municipality $municipality): void {
+        // 1) Municipal Admin
         $admin = User::updateOrCreate(
             ['email' => 'mad_admin@aparca.local'],
             [

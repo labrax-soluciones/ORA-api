@@ -8,7 +8,7 @@ use App\Models\Municipality;
 use Illuminate\Http\Request;
 
 class MunicipalityController extends Controller {
-    // Listado paginado (visible para perfiles con permiso municipal)
+    // Listado paginado
     public function index(Request $request) {
         $items = Municipality::query()
             ->orderBy('name')
@@ -28,9 +28,22 @@ class MunicipalityController extends Controller {
         return response()->json($municipality);
     }
 
-
+    // Update
     public function update(MunicipalityUpdateRequest $request, Municipality $municipality) {
         $municipality->update($request->validated());
         return response()->json($municipality);
+    }
+
+    // Soft delete
+    public function destroy(Municipality $municipality) {
+        $municipality->delete();
+        return response()->noContent();
+    }
+
+    // (Opcional) Restaurar un soft delete
+    public function restore($id) {
+        $mun = Municipality::withTrashed()->findOrFail($id);
+        $mun->restore();
+        return response()->json($mun);
     }
 }

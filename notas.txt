@@ -35,7 +35,7 @@ docker compose exec app php artisan migrate
 
 seed:
 docker compose exec app php artisan db:seed
-docker compose exec app php artisan db:seed --class=AdminUserSeeder
+docker compose exec app php artisan db:seed --class=RolesAndAdminSeeder
 
 log:
 docker compose logs -f --tail=100

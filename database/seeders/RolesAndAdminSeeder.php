@@ -10,10 +10,8 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
-class RolesAndAdminSeeder extends Seeder
-{
-    public function run(): void
-    {
+class RolesAndAdminSeeder extends Seeder {
+    public function run(): void {
         // Limpia caché de permisos por si ejecutas varias veces
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
@@ -79,6 +77,21 @@ class RolesAndAdminSeeder extends Seeder
 
         if (!$admin->hasRole(RoleName::ADMIN->value)) {
             $admin->assignRole(RoleName::ADMIN->value);
+        }
+
+        // 5) Usuario admin municipal
+        $munAdmin = User::updateOrCreate(
+            ['email' => 'municipal@aparca.local'],
+            [
+                'name'       => 'Admin Municipal',
+                'first_name' => 'Admin',
+                'last_name'  => 'Municipal',
+                'password'   => Hash::make('municipal1234'), // cámbialo en producción
+            ]
+        );
+
+        if (!$munAdmin->hasRole(RoleName::MUNICIPAL_ADMIN->value)) {
+            $munAdmin->assignRole(RoleName::MUNICIPAL_ADMIN->value);
         }
 
         // refresca caché

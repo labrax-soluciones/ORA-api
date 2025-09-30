@@ -34,6 +34,18 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('/municipalities/{municipality}', [MunicipalityController::class, 'update'])
         ->middleware('role:admin,api');
 
+    // PATCH edicion parcial
+    Route::patch('/municipalities/{municipality}', [MunicipalityController::class, 'update'])
+        ->middleware('role:admin,api');
+
+    // DELETE (SoftDelete)
+    Route::delete('/municipalities/{municipality}', [MunicipalityController::class, 'destroy'])
+        ->middleware('role:admin,api');
+
+    // RESTORE: /municipalities/{id}/restore
+    Route::post('/municipalities/{id}/restore', [MunicipalityController::class, 'restore'])
+        ->middleware('role:admin,api');
+
     // ---- Scoped por municipio (solo valida pertenencia) ----
     Route::prefix('/municipalities/{municipality}')
         ->middleware(['municipality.scope'])
