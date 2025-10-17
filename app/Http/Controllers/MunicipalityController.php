@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MunicipalityStatus;
 use App\Http\Requests\MunicipalityStoreRequest;
 use App\Http\Requests\MunicipalityUpdateRequest;
 use App\Models\Municipality;
@@ -27,6 +28,23 @@ class MunicipalityController extends Controller {
     public function show(Municipality $municipality) {
         return response()->json($municipality);
     }
+
+    // Endpoint  publico para ver datos basicos
+    public function publicBySlug(string $slug) {
+        $m = Municipality::query()
+            ->where('slug', $slug)
+            ->where('status', MunicipalityStatus::Active)
+            ->firstOrFail();
+
+        // Devuelve SOLO metadatos públicos necesarios para UI
+        return response()->json([
+            'id'        => $m->id,
+            'slug'      => $m->slug,
+            'name'      => $m->name,
+            'updated_at' => $m->updated_at?->toIso8601String(),
+        ]);
+    }
+
 
     // Update
     public function update(MunicipalityUpdateRequest $request, Municipality $municipality) {

@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MunicipalAdminController;
 use App\Http\Controllers\MunicipalityController;
+use App\Http\Controllers\Parking\ParkingZoneController;
+use App\Http\Controllers\Parking\ParkingZoneTypeController;
+use App\Http\Controllers\Parking\ParkingZoneTypeScheduleController;
 use App\Http\Controllers\PoliceController;
 use App\Http\Controllers\TechnicianController;
 use App\Http\Controllers\UserController;
@@ -13,6 +16,9 @@ Route::get('/health', fn() => response()->json(['ok' => true]));
 // públicas
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/auth/refresh', [AuthController::class, 'refresh']);
+
+Route::get('/public/municipalities/{slug}', [MunicipalityController::class, 'publicBySlug']);
+
 
 // protegidas
 Route::middleware(['auth:api'])->group(function () {
@@ -74,6 +80,33 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::post('/police', [PoliceController::class, 'store']);
                 Route::put('/police/{police}', [PoliceController::class, 'update']);
                 Route::delete('/police/{police}', [PoliceController::class, 'destroy']);
+            });
+
+            // Gestion de zonas y tipos (permiso "zone.manage")
+            Route::middleware('permission:zone.manage,api')->group(function () {
+
+                // Tipos de zona de aparcamiento
+                Route::get('/parking-zone-types', [ParkingZoneTypeController::class, 'index']);
+                Route::post('/parking-zone-types', [ParkingZoneTypeController::class, 'store']);
+                Route::get('/parking-zone-types/{type}', [ParkingZoneTypeController::class, 'show']);
+                Route::put('/parking-zone-types/{type}', [ParkingZoneTypeController::class, 'update']);
+                Route::patch('/parking-zone-types/{type}', [ParkingZoneTypeController::class, 'update']);
+                Route::delete('/parking-zone-types/{type}', [ParkingZoneTypeController::class, 'destroy']);
+
+                // Horarios de un tipo
+                Route::get('/parking-zone-types/{type}/schedules', [ParkingZoneTypeScheduleController::class, 'index']);
+                Route::post('/parking-zone-types/{type}/schedules', [ParkingZoneTypeScheduleController::class, 'store']);
+                Route::put('/parking-zone-types/{type}/schedules/{schedule}', [ParkingZoneTypeScheduleController::class, 'update']);
+                Route::patch('/parking-zone-types/{type}/schedules/{schedule}', [ParkingZoneTypeScheduleController::class, 'update']);
+                Route::delete('/parking-zone-types/{type}/schedules/{schedule}', [ParkingZoneTypeScheduleController::class, 'destroy']);
+
+                // Zonas de aparcamiento
+                Route::get('/parking-zones', [ParkingZoneController::class, 'index']);
+                Route::post('/parking-zones', [ParkingZoneController::class, 'store']);
+                Route::get('/parking-zones/{zone}', [ParkingZoneController::class, 'show']);
+                Route::put('/parking-zones/{zone}', [ParkingZoneController::class, 'update']);
+                Route::patch('/parking-zones/{zone}', [ParkingZoneController::class, 'update']);
+                Route::delete('/parking-zones/{zone}', [ParkingZoneController::class, 'destroy']);
             });
         });
 

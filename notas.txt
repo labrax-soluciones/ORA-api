@@ -42,3 +42,8 @@ docker compose logs -f --tail=100
 
 tinker:
 docker compose exec app php artisan tinker
+
+
+
+php artisan make:migration create_table
+docker compose exec app php artisan migrate:fresh --seed
