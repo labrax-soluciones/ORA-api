@@ -57,6 +57,9 @@ Route::middleware(['auth:api'])->group(function () {
         ->middleware(['municipality.scope'])
         ->group(function () {
 
+            // 📊 Contadores del dashboard
+            Route::get('/stats', [MunicipalityController::class, 'stats']);
+
             // --- Administradores municipales (requieren municipality.manage) ---
             Route::middleware('permission:municipality.manage,api')->group(function () {
                 Route::get('/admins', [MunicipalAdminController::class, 'index']);

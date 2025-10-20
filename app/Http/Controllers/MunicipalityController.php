@@ -5,7 +5,12 @@ namespace App\Http\Controllers;
 use App\Enums\MunicipalityStatus;
 use App\Http\Requests\MunicipalityStoreRequest;
 use App\Http\Requests\MunicipalityUpdateRequest;
+use App\Models\MunicipalAdminProfile;
 use App\Models\Municipality;
+use App\Models\ParkingZone;
+use App\Models\ParkingZoneType;
+use App\Models\PoliceProfile;
+use App\Models\TechnicianProfile;
 use Illuminate\Http\Request;
 
 class MunicipalityController extends Controller {
@@ -63,5 +68,22 @@ class MunicipalityController extends Controller {
         $mun = Municipality::withTrashed()->findOrFail($id);
         $mun->restore();
         return response()->json($mun);
+    }
+
+    public function stats(Municipality $municipality) {
+        $policeCount      = PoliceProfile::where('municipality_id', $municipality->id)->count();
+        $technicianCount  = TechnicianProfile::where('municipality_id', $municipality->id)->count();
+        $adminCount       = MunicipalAdminProfile::where('municipality_id', $municipality->id)->count();
+
+        $zoneCount        = ParkingZone::where('municipality_id', $municipality->id)->count();
+        $zoneTypesCount   = ParkingZoneType::where('municipality_id', $municipality->id)->count();
+
+        return response()->json([
+            'police_count'           => $policeCount,
+            'technician_count'       => $technicianCount,
+            'municipal_admin_count'  => $adminCount,
+            'zone_count'             => $zoneCount,
+            'zone_types_count'       => $zoneTypesCount,
+        ]);
     }
 }
