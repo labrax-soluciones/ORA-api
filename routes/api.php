@@ -110,6 +110,16 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::put('/parking-zones/{zone}', [ParkingZoneController::class, 'update']);
                 Route::patch('/parking-zones/{zone}', [ParkingZoneController::class, 'update']);
                 Route::delete('/parking-zones/{zone}', [ParkingZoneController::class, 'destroy']);
+                
+                // Zonas - flujo por partes
+                Route::post('/parking-zones/basic', [ParkingZoneController::class, 'storeBasic']); // crear básicos sin geometría
+                Route::patch('/parking-zones/{zone}/basic', [ParkingZoneController::class, 'updateBasic']); // editar básicos
+
+                // Geometría (solo geometría)
+                Route::put('/parking-zones/{zone}/geometry', [ParkingZoneController::class, 'upsertGeometry']); // crear/actualizar geometría
+                Route::delete('/parking-zones/{zone}/geometry', [ParkingZoneController::class, 'deleteGeometry']); // eliminar geometría
+
+
             });
         });
 
