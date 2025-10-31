@@ -85,7 +85,16 @@ class User extends Authenticatable implements JWTSubject {
         return $this->hasOne(PoliceProfile::class);
     }
     public function municipalAdminProfile() {
-        return $this->hasOne(\App\Models\MunicipalAdminProfile::class);
+        return $this->hasOne(MunicipalAdminProfile::class);
+    }
+
+
+    public function profile() {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    public function vehicles() {
+        return $this->hasMany(Vehicle::class);
     }
 
 

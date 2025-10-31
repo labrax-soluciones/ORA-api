@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Me\MyProfileController;
+use App\Http\Controllers\Me\MyVehicleController;
 use App\Http\Controllers\MunicipalAdminController;
 use App\Http\Controllers\MunicipalityController;
 use App\Http\Controllers\Parking\ParkingZoneController;
@@ -10,6 +12,7 @@ use App\Http\Controllers\Parking\ParkingZoneTypeScheduleController;
 use App\Http\Controllers\PoliceController;
 use App\Http\Controllers\TechnicianController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VehicleBrowseController;
 
 Route::get('/health', fn() => response()->json(['ok' => true]));
 
@@ -25,6 +28,31 @@ Route::middleware(['auth:api'])->group(function () {
 
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Perfil del usuario autenticado
+    Route::get('/me/profile', [MyProfileController::class, 'show']);
+    Route::match(['put', 'patch'], '/me/profile', [MyProfileController::class, 'update']);
+
+    // Vista pública-básica de cualquier usuario (autenticado, solo lectura)
+    Route::get('/users/{user}/public', [UserController::class, 'publicShow']);
+
+    // ---- ADMIN (ya lo tienes con role:admin,api) ----
+    Route::resource('users', UserController::class)
+        ->only(['index', 'show', 'store', 'update', 'destroy'])
+        ->middleware('role:admin,api');
+
+    // === Vehículos del usuario autenticado ===
+    Route::get('/me/vehicles', [MyVehicleController::class, 'index']);
+    Route::post('/me/vehicles', [MyVehicleController::class, 'store']);
+    Route::get('/me/vehicles/{vehicle}', [MyVehicleController::class, 'show']);
+    Route::match(['put', 'patch'], '/me/vehicles/{vehicle}', [MyVehicleController::class, 'update']);
+
+    // === Consulta (solo lectura) por personal autorizado ===
+    Route::middleware('role:admin|municipal_admin|technician|police,api')->group(function () {
+        Route::get('/users/{user}/vehicles', [VehicleBrowseController::class, 'index']);
+        Route::get('/users/{user}/vehicles/{vehicle}', [VehicleBrowseController::class, 'show']);
+    });
+
 
     // municipalidades
     Route::get('/municipalities', [MunicipalityController::class, 'index'])
@@ -110,7 +138,7 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::put('/parking-zones/{zone}', [ParkingZoneController::class, 'update']);
                 Route::patch('/parking-zones/{zone}', [ParkingZoneController::class, 'update']);
                 Route::delete('/parking-zones/{zone}', [ParkingZoneController::class, 'destroy']);
-                
+
                 // Zonas - flujo por partes
                 Route::post('/parking-zones/basic', [ParkingZoneController::class, 'storeBasic']); // crear básicos sin geometría
                 Route::patch('/parking-zones/{zone}/basic', [ParkingZoneController::class, 'updateBasic']); // editar básicos
